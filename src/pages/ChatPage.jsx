@@ -28,7 +28,7 @@ const ChatPage = () => {
   const fetchConversations = useCallback(async () => {
     try {
       const res = await axiosClient.get('/conversations');
-      const updated = res.data.map(conv => ({
+      const updated = res.data.data.map(conv => ({
         ...conv,
         auth_user_id: authUser?.id,
       }));

@@ -16,7 +16,7 @@ const SearchUser = ({ setSelectedUser }) => {
 
     try {
       const res = await axiosClient.get(`/search-users?q=${value}`);
-      setResults(res.data);
+      setResults(res.data.data);
     } catch (error) {
       console.error('Search failed', error);
     }

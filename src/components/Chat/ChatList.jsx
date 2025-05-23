@@ -18,7 +18,7 @@ const ChatList = ({ conversations, setSelectedConversation }) => {
               >
                 <div className="font-medium">{otherUser?.name}</div>
                 <div className="text-sm text-gray-500">
-                  Last message: {con.messages[0]?.message?.slice(0, 30) || 'No message yet'}
+                  Last message: {con.last_message?.message?.slice(0, 30) || 'No message yet'}
                 </div>
               </li>
             );

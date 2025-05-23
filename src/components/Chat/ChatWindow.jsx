@@ -57,7 +57,7 @@ const ChatWindow = ({ conversation, user, refreshConversations, authUser }) => {
     setError(null);
     try {
       const res = await axiosClient.get(`/messages/${conversationId}`);
-      setMessages(res.data);
+      setMessages(res.data.data);
     } catch (err) {
       setError('Failed to fetch messages.');
       console.error(err);
@@ -83,8 +83,8 @@ const ChatWindow = ({ conversation, user, refreshConversations, authUser }) => {
       }
 
       setMessages((prev) => {
-        const exists = prev.some((m) => m.id === res.data.id);
-        return exists ? prev : [...prev, res.data];
+        const exists = prev.some((m) => m.id === res.data.data.id);
+        return exists ? prev : [...prev, res.data.data];
       });
     } catch (err) {
       setError('Failed to send message.');
