@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef, useCallback } from 'react';
 import PropTypes from 'prop-types';
 import MessageInput from './MessageInput';
 import axiosClient from '../../api/axiosClient';
+import echo from '../../echo';
 
 const MessageBubble = ({ msg, isSender, initial }) => {
   const time = new Date(msg.created_at).toLocaleTimeString([], {
@@ -60,8 +61,9 @@ const ChatWindow = ({ conversation, user, refreshConversations, authUser }) => {
     } catch (err) {
       setError('Failed to fetch messages.');
       console.error(err);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }, []);
 
   const handleSend = async (text) => {
@@ -77,10 +79,13 @@ const ChatWindow = ({ conversation, user, refreshConversations, authUser }) => {
       if (conversation) {
         fetchMessages(conversation.id);
       } else {
-        refreshConversations(); // new conversation created
+        refreshConversations();
       }
 
-      setMessages((prev) => [...prev, res.data]);
+      setMessages((prev) => {
+        const exists = prev.some((m) => m.id === res.data.id);
+        return exists ? prev : [...prev, res.data];
+      });
     } catch (err) {
       setError('Failed to send message.');
       console.error(err);
@@ -99,6 +104,22 @@ const ChatWindow = ({ conversation, user, refreshConversations, authUser }) => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  useEffect(() => {
+    const channel = echo.channel('chat-channel');
+
+    channel.listen('.ChatEvent', (e) => {
+      console.log('RealTime Message:', e);
+      setMessages((prev) => {
+        const exists = prev.some((m) => m.id === e.id);
+        return exists ? prev : [...prev, e];
+      });
+    });
+
+    return () => {
+      echo.leave('chat-channel');
+    };
+  }, []);
+
   if (!conversation && !user) {
     return <div className="p-4 text-gray-600">Select a user or conversation to start chatting.</div>;
   }
@@ -111,12 +132,10 @@ const ChatWindow = ({ conversation, user, refreshConversations, authUser }) => {
 
   return (
     <div className="flex flex-col h-full">
-      {/* Header */}
       <div className="bg-white p-4 shadow-sm border-b text-lg font-semibold">
         Chatting with: {chattingWith}
       </div>
 
-      {/* Messages Area */}
       <div className="flex-grow overflow-y-auto p-4 bg-gray-50 rounded">
         {error && <p className="text-red-500 mb-2">{error}</p>}
 
@@ -130,7 +149,7 @@ const ChatWindow = ({ conversation, user, refreshConversations, authUser }) => {
             const initial = msg.sender?.name?.charAt(0).toUpperCase() || 'U';
             return (
               <MessageBubble
-                key={msg.id}
+                key={`msg-${msg.id}`}
                 msg={msg}
                 isSender={isSender}
                 initial={initial}
@@ -138,12 +157,9 @@ const ChatWindow = ({ conversation, user, refreshConversations, authUser }) => {
             );
           })
         )}
-
-        {/* Auto-scroll anchor */}
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Message Input */}
       <MessageInput onSend={handleSend} />
     </div>
   );
@@ -157,4 +173,3 @@ ChatWindow.propTypes = {
 };
 
 export default ChatWindow;
-
