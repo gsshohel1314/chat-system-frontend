@@ -108,7 +108,7 @@ const ChatWindow = ({ conversation, user, refreshConversations, authUser }) => {
     const channel = echo.channel('chat-channel');
 
     channel.listen('.ChatEvent', (e) => {
-      console.log('RealTime Message:', e);
+      // console.log('RealTime Message:', e);
       setMessages((prev) => {
         const exists = prev.some((m) => m.id === e.id);
         return exists ? prev : [...prev, e];
